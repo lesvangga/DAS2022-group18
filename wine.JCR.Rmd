@@ -1,0 +1,195 @@
+---
+title: "wine"
+output: pdf_document
+---
+
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(ggplot2)
+library(ggrepel)
+library(grid)
+library(gridExtra)
+library(GGally)
+library(skimr)
+library(kableExtra)
+library(ggpubr)
+library(corrplot)
+library(gapminder)
+library(sjPlot)
+library(stats)
+library(jtools)
+```
+
+
+```{r}
+wine = read.csv("C:/Users/litia/Desktop/UofG/5085 Data Analysis Skills (Level M)/Group project 2/Group-project-2/dataset18f.csv", header = T)
+
+summary(wine)
+```
+
+```{r}
+wine_f = na.omit(wine)
+
+glimpse(wine_f)
+```
+Which properties of wine influence whether the number of points awarded is greater than
+90?
+
+```{r}
+wpoint = wine_f %>%
+  filter(points>=90) %>% 
+ 
+summary(wpoint)
+
+glimpse(wpoint)
+```
+
+```{r,add grade which is 1-0 variable}
+wine_f[,3:4]=lapply(wine_f[,3:4],as.numeric)
+glimpse(wine_f)
+grade=ifelse(wine_f$points>=90,'1','0')
+wine_ff=wine_f %>% 
+  mutate(grade) %>% 
+  na.omit()
+
+```
+
+##price-grade
+```{r price plot}
+wine.price=wine_ff %>% 
+  dplyr::select(grade,price)
+ggplot(data=wine.price,aes(x=grade,y=price,fill=grade))+
+  geom_boxplot()
+summary(wine.price)
+```
+
+```{r price logodd}
+wine.price$grade=as.numeric(wine.price$grade)
+model=glm(grade~price,data=wine.price,
+          family = binomial(link="logit"))
+summary(model)
+
+```
+
+
+```{r}
+confint(model) %>% 
+  kable()
+```
+
+```{r endpoints}
+mod.price.coef.logodds=model %>% 
+  summary() %>% 
+  coef()
+price.logodds.lower=mod.price.coef.logodds[2,1]-1.96*mod.price.coef.logodds[2,2]
+price.logodds.upper=mod.price.coef.logodds[2,1]+1.96*mod.price.coef.logodds[2,2]
+table(price.logodds.lower,price.logodds.upper)
+```
+
+```{r logodds plot}
+plot_model(model,show.values=TRUE,transform=NULL,title="Log-Odds(price)",show.p=FALSE)
+```
+
+```{r add price.logodds}
+wine.price=wine.price %>% 
+  mutate(price.logodds=predict(model))
+```
+
+```{r price odd}
+price.odds.lower=exp(price.logodds.lower)
+price.odds.upper=exp(price.logodds.upper)
+
+plot_model(model,show.values = TRUE,axis.lim=c(1.05,1.07),title="Odds(price)",show.p = FALSE)
+
+wine.price=wine.price %>% 
+  mutate(price.odds=exp(price.logodds))
+```
+
+```{r price probabilities}
+wine.price=wine.price %>% 
+  mutate(price.probs=fitted(model))
+
+ggplot(data=wine.price,aes(x=price,y=price.probs))+
+  geom_smooth(method="glm",method.args=list(family="binomial"),se=FALSE)+
+  labs(x="price",y="probability of price")
+```
+
+
+
+##country-grade
+```{r country plot}
+
+library(janitor)
+wine.country=wine_ff %>% 
+  dplyr::select(grade,country)
+
+
+country.tab=wine_ff %>% 
+  tabyl(country,grade) %>% 
+  adorn_percentages() %>% 
+  adorn_pct_formatting() %>% 
+  adorn_ns()
+
+
+ggplot(data = wine.country, aes(x = ))
+
+library(gcookbook)
+ggplot(data=country.tab,aes(x=country,y=country.tab$`0`))+
+  geom_col()
+
+```
+
+```{r}
+wine.country$grade = as.numeric(wine.country$grade)
+
+model.country= glm(grade ~ country, data = wine.country, family = binomial(link = "logit"))
+
+model.country %>%
+  summary()
+```
+
+```{r}
+confint(model.country) %>%
+  kable()
+```
+
+
+```{r}
+mod.logodd.country = model.country %>%
+                            summary() %>%
+                            coef()
+mod.logodd.country
+
+country.logodds.lower = mod.logodd.country[, "Estimate"] - 
+                        1.96 * mod.logodd.country[, "Std. Error"]
+
+country.logodds.upper = mod.logodd.country[, "Estimate"] + 
+                        1.96 * mod.logodd.country[, "Std. Error"]
+
+plot_model(model.country, show.values = TRUE, transform = NULL,
+           title = "Log-Odds (Country instructor)", show.p = FALSE)
+```
+```{r}
+wine.country = wine.country %>%
+                  mutate(logodds.c = predict(model.country))
+```
+
+ODDS
+
+```{r}
+model.country %>%
+ coef() %>%
+  exp()
+```
+
+
+
+
+
+
+
+
+
+
