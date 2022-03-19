@@ -6,6 +6,7 @@ output: pdf_document
 
 ```{r}
 library(tidyverse)
+library(tidyr)
 library(moderndive)
 library(ggplot2)
 library(ggrepel)
@@ -20,6 +21,7 @@ library(gapminder)
 library(sjPlot)
 library(stats)
 library(jtools)
+library(janitor)
 ```
 
 
