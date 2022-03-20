@@ -3,6 +3,10 @@ title: "wine"
 output: pdf_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, warning = FALSE, message = FALSE, comment = NA)
+```
+
 
 ```{r}
 library(tidyverse)
@@ -24,15 +28,15 @@ library(jtools)
 
 
 ```{r}
-wine = read.csv("C:/Users/litia/Desktop/UofG/5085 Data Analysis Skills (Level M)/Group project 2/Group-project-2/dataset18f.csv", header = T)
-
+wine = read.csv("D:/COURSE/STATS5085 DATA ANALYSIS SKILLS/Assessment-Presentation/dataset18.csv", header = T)
 summary(wine)
+head(wine)
 ```
 
 ```{r}
 wine_f = na.omit(wine)
-
 glimpse(wine_f)
+head(wine_f)
 ```
 Which properties of wine influence whether the number of points awarded is greater than
 90?
@@ -40,11 +44,70 @@ Which properties of wine influence whether the number of points awarded is great
 ```{r}
 wpoint = wine_f %>%
   filter(points>=90)
- 
 summary(wpoint)
-
 glimpse(wpoint)
+head(wpoint)
 ```
+
+
+
+
+```{r}
+# recoding the level in each variable
+wine_recode <- wine_f %>%
+  mutate(grade = ifelse(points>=90,1,0)) %>%
+  mutate(country_level = recode(country,
+                                "US" = "US", "France" = "France", "Italy" = "Italy", .default = "Other")) %>%
+  mutate(province_level = recode(province,
+                                "California" = "California", "Washington" = "Washington", "Bordeaux" = "Bordeaux",
+                                "Tuscany" = "Tuscany", .default = "Other")) %>%
+  mutate(variety_level = recode(variety,
+                                "Pinot Noir" = "Pinot Noir", "Chardonnay" = "Chardonnay", "Cabernet Sauvignon" = "Cabernet Sauvignon",
+                                "Red Blend" = "Red Blend", "Bordeaux-style Red Blend" = "Bordeaux-style Red Blend", .default = "Other")) %>%
+  select(grade, price, country_level, province_level, variety_level)
+
+wine_recode
+```
+
+```{r}
+# modelling using GLM
+model <- glm(grade ~ ., family = binomial, data=wine_recode)
+summary(model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r,add grade which is 1-0 variable}
 wine_f[,3:4]=lapply(wine_f[,3:4],as.numeric)
@@ -53,6 +116,7 @@ grade=ifelse(wine_f$points>=90,'1','0')
 wine_ff=wine_f %>% 
   mutate(grade) %>% 
   na.omit()
+wine_ff
 
 getmode = function(v) {
  uniqv = unique(v)
@@ -60,7 +124,7 @@ getmode = function(v) {
 }
 
 result = getmode(wine_ff$price)
-print(result)
+result
 ```
 
 ##price-grade
